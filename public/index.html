@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NYC Art Radar</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Crimson+Pro:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <h1><span class="radar-pulse"></span>NYC Art Radar</h1>
+                <span class="status" id="status">Ready to scan</span>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+
+            <div class="preferences">
+                <h2>Your Taste Profile</h2>
+                <div class="pref-section">
+                    <h3>Artists You Follow</h3>
+                    <div class="pref-list">
+                        <span class="pref-item">Cody Hudson</span>
+                        <span class="pref-item">Julian Watts</span>
+                        <span class="pref-item">Ted Larsen</span>
+                        <span class="pref-item">Simone Leigh</span>
+                        <span class="pref-item">Julie Mehretu</span>
+                        <span class="pref-item">Kevin Beasley</span>
+                        <span class="pref-item">Theaster Gates</span>
+                        <span class="pref-item">Martin Puryear</span>
+                    </div>
+                </div>
+                <div class="pref-section">
+                    <h3>Preferred Venues</h3>
+                    <div class="pref-list">
+                        <span class="pref-item">Karma Gallery</span>
+                        <span class="pref-item">The Met</span>
+                        <span class="pref-item">Whitney Museum</span>
+                        <span class="pref-item">Noguchi Museum</span>
+                        <span class="pref-item">Jane Hartsook Gallery</span>
+                    </div>
+                </div>
+                <div class="pref-section">
+                    <h3>Data Sources</h3>
+                    <div class="pref-list">
+                        <span class="pref-item">Artnet</span>
+                        <span class="pref-item">Artsy</span>
+                        <span class="pref-item">Upstate Art Weekend</span>
+                        <span class="pref-item">Brooklyn Rail</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="controls">
+                <button class="primary" id="scanBtn">Scan for Events</button>
+                <button id="similarArtistsBtn">Find Similar Artists</button>
+                <button id="discoverVenuesBtn">Discover More Venues</button>
+            </div>
+
+            <div class="stats-bar" id="statsBar" style="display: none;">
+                <div class="stat">
+                    <span class="stat-label">Events Found</span>
+                    <span class="stat-value" id="eventCount">0</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">High Match</span>
+                    <span class="stat-value" id="highMatchCount">0</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">New Venues</span>
+                    <span class="stat-value" id="venueCount">0</span>
+                </div>
+            </div>
+
+            <div id="error" style="display: none;"></div>
+
+            <div id="loading" class="loading" style="display: none;">
+                <div class="spinner"></div>
+                <p>Scanning NYC art scene...</p>
+            </div>
+
+            <div id="events"></div>
+
+        </div>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+</html>
