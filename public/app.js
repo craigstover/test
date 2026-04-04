@@ -56,6 +56,33 @@ function renderEventGroup(containerId, label, events) {
     `;
 }
 
+function venueFallbackSvg(venueName) {
+    const lines = [];
+    const words = venueName.split(' ');
+    let line = '';
+    for (const word of words) {
+        const test = line ? `${line} ${word}` : word;
+        if (test.length > 22 && line) {
+            lines.push(line);
+            line = word;
+        } else {
+            line = test;
+        }
+    }
+    if (line) lines.push(line);
+
+    const lineHeight = 26;
+    const totalHeight = lines.length * lineHeight;
+    const startY = 150 - (totalHeight / 2) + lineHeight / 2;
+
+    const textEls = lines.map((l, i) =>
+        `<text x="200" y="${startY + i * lineHeight}" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="15" font-weight="500" fill="#8a8680" text-anchor="middle" dominant-baseline="middle">${l}</text>`
+    ).join('');
+
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300"><rect width="400" height="300" fill="#f7f7f6"/>${textEls}</svg>`;
+    return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+}
+
 function renderEventCard(event) {
     const title = event.title || 'untitled';
     const venue = event.venue || '';
@@ -64,13 +91,9 @@ function renderEventCard(event) {
     const location = event.city && event.state ? `<div class="event-location">${event.city}, ${event.state}</div>` : '';
     const description = event.description ? `<div class="event-description">${event.description}</div>` : '';
     const type = event.type ? `<div class="event-type-tag">${event.type}</div>` : '';
-    const logoFallback = event.sourceUrl
-        ? `https://logo.clearbit.com/${new URL(event.sourceUrl).hostname}`
-        : '';
-    const imgSrc = event.imageUrl || logoFallback;
-    const image = imgSrc
-        ? `<img src="${imgSrc}" alt="${title}" loading="lazy" onerror="this.src='${logoFallback}'; this.classList.add('is-logo')">`
-        : '';
+    const svgFallback = venueFallbackSvg(venue);
+    const imgSrc = event.imageUrl || svgFallback;
+    const image = `<img src="${imgSrc}" alt="${venue}" loading="lazy" onerror="this.onerror=null;this.src='${svgFallback}';this.classList.add('is-logo')">`;
     const link = event.sourceUrl
         ? `<a class="event-link" href="${event.sourceUrl}" target="_blank" rel="noopener">view source ↗</a>`
         : '';
