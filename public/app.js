@@ -8,7 +8,7 @@ document.getElementById('scanBtn').addEventListener('click', loadEvents);
 
 async function loadEvents() {
     emptyState.style.display = 'none';
-    setLoading(true, 'scanning...');
+    setLoading(true);
     errorEl.style.display = 'none';
 
     try {
@@ -64,7 +64,13 @@ function renderEventCard(event) {
     const location = event.city && event.state ? `<div class="event-location">${event.city}, ${event.state}</div>` : '';
     const description = event.description ? `<div class="event-description">${event.description}</div>` : '';
     const type = event.type ? `<div class="event-type-tag">${event.type}</div>` : '';
-    const image = event.imageUrl ? `<img src="${event.imageUrl}" alt="${title}" loading="lazy">` : '';
+    const logoFallback = event.sourceUrl
+        ? `https://logo.clearbit.com/${new URL(event.sourceUrl).hostname}`
+        : '';
+    const imgSrc = event.imageUrl || logoFallback;
+    const image = imgSrc
+        ? `<img src="${imgSrc}" alt="${title}" loading="lazy" onerror="this.src='${logoFallback}'; this.classList.add('is-logo')">`
+        : '';
     const link = event.sourceUrl
         ? `<a class="event-link" href="${event.sourceUrl}" target="_blank" rel="noopener">view source ↗</a>`
         : '';
@@ -86,9 +92,8 @@ function renderEventCard(event) {
     `;
 }
 
-function setLoading(isLoading, message = '') {
+function setLoading(isLoading) {
     loadingEl.style.display = isLoading ? 'block' : 'none';
-    if (message) statusEl.textContent = message;
 }
 
 function showError(message) {
