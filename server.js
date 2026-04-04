@@ -329,6 +329,8 @@ function stripHtml(html) {
   return html
     .replace(/<script[\s\S]*?<\/script>/gi, '')
     .replace(/<style[\s\S]*?<\/style>/gi, '')
+    // Preserve img src as inline markers before stripping all tags
+    .replace(/<img[^>]+src=["']([^"']+)["'][^>]*>/gi, ' [img:$1] ')
     .replace(/<[^>]+>/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
@@ -382,6 +384,7 @@ Interests: contemporary sculpture, abstraction, conceptual art, socially engaged
       "dates": "Date range as found on the page, or null",
       "description": "1-3 sentence summary of the exhibition",
       "type": "one of: art fair, gallery show, museum show, public art, performance, residency",
+      "imageUrl": "URL from the nearest [img:URL] marker in the listing, or null if none found",
       "isUpcoming": true if the exhibition has not yet opened, false if currently active,
       "tags": ["relevant", "tags"]
     }
@@ -408,13 +411,13 @@ Interests: contemporary sculpture, abstraction, conceptual art, socially engaged
         const jsonString = jsonMatch ? (jsonMatch[1] || jsonMatch[0]) : content;
         const parsed = JSON.parse(jsonString);
 
-        // Build a map of source name -> image for this batch
+        // Build a map of source name -> og:image fallback for this batch
         const batchImageMap = Object.fromEntries(batch.map(s => [s.name, s.image]));
 
-        // Attach source URL and image to each event based on venue name
+        // Attach source URL; use Claude's per-exhibition imageUrl, fall back to og:image
         (parsed.events || []).forEach(event => {
           event.sourceUrl = sourceUrlMap[event.venue] || null;
-          event.imageUrl = batchImageMap[event.venue] || null;
+          event.imageUrl = event.imageUrl || batchImageMap[event.venue] || null;
         });
 
         return parsed;
