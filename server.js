@@ -285,54 +285,46 @@ function stripHtml(html) {
 
 app.post('/api/scan-museums', async (req, res) => {
   try {
-    // Fetch all museum pages in parallel
-    const results = await Promise.allSettled(
+    // Fetch all pages in parallel with a 10s timeout each
+    const fetchResults = await Promise.allSettled(
       MUSEUM_SOURCES.map(async (source) => {
         const response = await fetch(source.url, { signal: AbortSignal.timeout(10000) });
-        if (!response.ok) throw new Error(`${source.name}: HTTP ${response.status}`);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const html = await response.text();
-        const text = stripHtml(html).slice(0, 3000);
+        const text = stripHtml(html).slice(0, 1500);
         return { name: source.name, text };
       })
     );
 
-    const successful = results
+    const successful = fetchResults
       .filter(r => r.status === 'fulfilled')
       .map(r => r.value);
 
-    const failed = results
-      .filter(r => r.status === 'rejected')
-      .map((r, i) => MUSEUM_SOURCES[i].name);
+    const failed = fetchResults
+      .map((r, i) => r.status === 'rejected' ? MUSEUM_SOURCES[i].name : null)
+      .filter(Boolean);
 
     if (successful.length === 0) {
-      throw new Error('All museum sources failed to load');
+      throw new Error('All sources failed to load');
     }
 
-    const combined = successful
-      .map(s => `=== ${s.name} ===\n${s.text}`)
-      .join('\n\n');
+    // Split into batches of 6 and call Claude in parallel per batch
+    const BATCH_SIZE = 6;
+    const batches = [];
+    for (let i = 0; i < successful.length; i += BATCH_SIZE) {
+      batches.push(successful.slice(i, i + BATCH_SIZE));
+    }
 
-    const message = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 4000,
-      messages: [{
-        role: 'user',
-        content: `Below are current exhibition listings fetched from major museum websites. Extract all exhibitions you can find, then filter and rank them based on this user's taste profile:
-
-Favorite artists: ${userProfile.artists.join(', ')}
+    const tasteProfile = `Favorite artists: ${userProfile.artists.join(', ')}
 Preferred venues: ${userProfile.venues.join(', ')}
-Interests: contemporary sculpture, abstraction, conceptual art, socially engaged practices, installation, materiality
+Interests: contemporary sculpture, abstraction, conceptual art, socially engaged practices, installation, materiality`;
 
-LISTINGS:
-${combined}
-
-Return ONLY JSON (no markdown, no backticks, no preamble):
-{
+    const jsonSchema = `{
   "events": [
     {
       "title": "Exhibition title",
       "artist": "Artist name(s)",
-      "venue": "Museum name",
+      "venue": "Venue name",
       "dates": "Date range if found, or null",
       "description": "Brief description",
       "matchScore": 85-100 strong match, 70-84 moderate, 60-69 loose connection,
@@ -340,20 +332,37 @@ Return ONLY JSON (no markdown, no backticks, no preamble):
       "isNewVenue": true if venue not in user's preferred venues list
     }
   ]
-}`
-      }]
-    });
+}`;
 
-    const content = message.content[0].text;
-    let jsonMatch = content.match(/```json\s*([\s\S]*?)\s*```/);
-    if (!jsonMatch) jsonMatch = content.match(/\{[\s\S]*\}/);
+    const batchResults = await Promise.allSettled(
+      batches.map(async (batch) => {
+        const combined = batch.map(s => `=== ${s.name} ===\n${s.text}`).join('\n\n');
+        const message = await anthropic.messages.create({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 2000,
+          messages: [{
+            role: 'user',
+            content: `Extract exhibition listings from the page content below, then filter and rank by this taste profile:\n\n${tasteProfile}\n\nLISTINGS:\n${combined}\n\nReturn ONLY JSON (no markdown, no backticks):\n${jsonSchema}`
+          }]
+        });
 
-    const jsonString = jsonMatch ? (jsonMatch[1] || jsonMatch[0]) : content;
-    const data = JSON.parse(jsonString);
+        const content = message.content[0].text;
+        let jsonMatch = content.match(/```json\s*([\s\S]*?)\s*```/);
+        if (!jsonMatch) jsonMatch = content.match(/\{[\s\S]*\}/);
+        const jsonString = jsonMatch ? (jsonMatch[1] || jsonMatch[0]) : content;
+        return JSON.parse(jsonString);
+      })
+    );
 
-    if (failed.length > 0) {
-      data.failedSources = failed;
-    }
+    // Merge all events, sort by matchScore
+    const allEvents = batchResults
+      .filter(r => r.status === 'fulfilled')
+      .flatMap(r => r.value.events || []);
+
+    allEvents.sort((a, b) => b.matchScore - a.matchScore);
+
+    const data = { events: allEvents };
+    if (failed.length > 0) data.failedSources = failed;
 
     res.json(data);
   } catch (error) {
