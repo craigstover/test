@@ -64,9 +64,11 @@ function renderEventGroup(containerId, label, events) {
         return;
     }
     container.innerHTML = `
-        <h2 class="section-label">${label}</h2>
-        <div class="events-grid">
-            ${events.map(renderEventCard).join('')}
+        <div class="events-group">
+            <h2 class="section-label">${label}</h2>
+            <div class="events-grid">
+                ${events.map(renderEventCard).join('')}
+            </div>
         </div>
     `;
 }

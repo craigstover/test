@@ -4,49 +4,37 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NYC Art Radar</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Crimson+Pro:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <header>
-        <div class="container">
-            <div class="header-content">
-                <h1><span class="radar-pulse"></span>NYC Art Radar</h1>
-                <span class="status" id="status">Ready</span>
-            </div>
-            <nav class="main-nav">
-                <button class="nav-btn active" data-section="events">Events</button>
-                <button class="nav-btn" data-section="venues">Venues</button>
-                <button class="nav-btn" data-section="artists">Artists</button>
-            </nav>
+        <div class="header-top">
+            <h1><span class="radar-pulse"></span>NYC Art Radar</h1>
+            <span class="status" id="status">Ready</span>
         </div>
+        <nav class="main-nav">
+            <button class="nav-btn active" data-section="events">Events</button>
+            <button class="nav-btn" data-section="venues">Venues</button>
+            <button class="nav-btn" data-section="artists">Artists</button>
+        </nav>
     </header>
 
     <main>
-        <div class="container">
+        <div id="error" style="display:none;"></div>
 
-            <div id="error" style="display: none;"></div>
-
-            <div id="loading" class="loading" style="display: none;">
-                <div class="spinner"></div>
-                <p>Scanning...</p>
-            </div>
-
-            <!-- Events Section -->
-            <section id="section-events" class="content-section">
-                <div id="events-active"></div>
-                <div id="events-upcoming"></div>
-            </section>
-
-            <!-- Venues Section -->
-            <section id="section-venues" class="content-section" style="display:none;"></section>
-
-            <!-- Artists Section -->
-            <section id="section-artists" class="content-section" style="display:none;"></section>
-
+        <div id="loading" class="loading" style="display:none;">
+            <div class="spinner"></div>
+            <p>Scanning</p>
         </div>
+
+        <section id="section-events" class="content-section">
+            <div id="events-active"></div>
+            <div id="events-upcoming"></div>
+        </section>
+
+        <section id="section-venues" class="content-section" style="display:none;"></section>
+
+        <section id="section-artists" class="content-section" style="display:none;"></section>
     </main>
 
     <script src="app.js"></script>
