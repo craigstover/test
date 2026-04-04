@@ -438,6 +438,104 @@ Interests: contemporary sculpture, abstraction, conceptual art, socially engaged
   }
 });
 
+});
+
+app.post('/api/arena-discovery', async (req, res) => {
+  try {
+    const ARENA_API = 'https://api.are.na/v2';
+
+    // Search Are.na for channels related to a sample of the user's artists
+    // Use a subset to avoid rate limits
+    const searchArtists = userProfile.artists.slice(0, 4);
+
+    const channelSearches = await Promise.allSettled(
+      searchArtists.map(async (artist) => {
+        const url = `${ARENA_API}/search/channels?q=${encodeURIComponent(artist)}&per=4`;
+        const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
+        if (!res.ok) throw new Error(`Arena search failed: ${res.status}`);
+        const data = await res.json();
+        return (data.channels || []).map(c => ({ slug: c.slug, title: c.title }));
+      })
+    );
+
+    // Collect unique channel slugs
+    const seen = new Set();
+    const channels = channelSearches
+      .filter(r => r.status === 'fulfilled')
+      .flatMap(r => r.value)
+      .filter(c => c.slug && !seen.has(c.slug) && seen.add(c.slug))
+      .slice(0, 8); // cap at 8 channels to stay within rate limits
+
+    if (channels.length === 0) {
+      return res.json({ artists: [] });
+    }
+
+    // Fetch contents of each channel (stagger slightly to respect rate limits)
+    const contentResults = [];
+    for (const channel of channels) {
+      await new Promise(r => setTimeout(r, 200));
+      try {
+        const url = `${ARENA_API}/channels/${channel.slug}/contents?per=40`;
+        const r = await fetch(url, { signal: AbortSignal.timeout(8000) });
+        if (!r.ok) continue;
+        const data = await r.json();
+        contentResults.push({ channel: channel.title, blocks: data.contents || [] });
+      } catch {}
+    }
+
+    // Build a condensed text representation for Claude
+    const summary = contentResults.map(({ channel, blocks }) => {
+      const items = blocks
+        .filter(b => b.title || b.description)
+        .slice(0, 20)
+        .map(b => {
+          const img = b.image?.thumb?.url || null;
+          return `- ${b.title || ''}${b.description ? ': ' + b.description.slice(0, 120) : ''}${img ? ` [img:${img}]` : ''}`;
+        })
+        .join('\n');
+      return `=== Channel: ${channel} ===\n${items}`;
+    }).join('\n\n');
+
+    const message = await anthropic.messages.create({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 2000,
+      messages: [{
+        role: 'user',
+        content: `The user follows these artists: ${userProfile.artists.join(', ')}.
+
+Below are contents from Are.na channels curated by people who also collect and follow these artists. Identify 10-15 artists mentioned or implied in the channel contents that the user likely doesn't know yet but would enjoy — focus on contemporary, emerging, and mid-career artists working in sculpture, installation, abstraction, conceptual, or socially engaged practices.
+
+Do NOT include artists already in the user's list.
+
+ARENA CHANNEL CONTENTS:
+${summary}
+
+Return ONLY JSON (no markdown, no backticks):
+{
+  "artists": [
+    {
+      "name": "Artist name",
+      "connection": "1-2 sentences on why they'd appeal to this user and what they make",
+      "imageUrl": "URL from [img:URL] if one appeared near this artist's name, otherwise null"
+    }
+  ]
+}`
+      }]
+    });
+
+    const content = message.content[0].text;
+    let jsonMatch = content.match(/```json\s*([\s\S]*?)\s*```/);
+    if (!jsonMatch) jsonMatch = content.match(/\{[\s\S]*\}/);
+    const jsonString = jsonMatch ? (jsonMatch[1] || jsonMatch[0]) : content;
+    const data = JSON.parse(jsonString);
+
+    res.json(data);
+  } catch (error) {
+    console.error('Error with Are.na discovery:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Serve the main page
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));

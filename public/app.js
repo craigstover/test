@@ -149,11 +149,11 @@ async function loadVenues() {
 // ── Artists ───────────────────────────────────────────────────────────────────
 
 async function loadArtists() {
-    setLoading(true, 'Finding artists...');
+    setLoading(true, 'Searching Are.na...');
     errorEl.style.display = 'none';
 
     try {
-        const res = await fetch('/api/similar-artists', {
+        const res = await fetch('/api/arena-discovery', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' }
         });
@@ -161,21 +161,32 @@ async function loadArtists() {
         const data = await res.json();
         if (data.error) throw new Error(data.error);
 
+        const artists = data.artists || [];
         const container = document.getElementById('section-artists');
         container.innerHTML = `
-            <div class="events-grid">
-                ${(data.artists || []).map(a => `
-                    <div class="event-card">
-                        <div class="event-title">${a.name}</div>
-                        <div class="event-description">${a.connection}</div>
-                        ${a.currentShow ? `<div class="event-dates" style="margin-top:0.75rem;">${a.currentShow}</div>` : ''}
-                    </div>
-                `).join('')}
+            <div class="events-group">
+                <h2 class="section-label">Discovered via Are.na</h2>
+                <div class="events-grid">
+                    ${artists.map(a => {
+                        const img = a.imageUrl
+                            ? `<img src="${a.imageUrl}" alt="${a.name}" loading="lazy">`
+                            : '';
+                        return `
+                            <div class="event-card">
+                                <div class="event-image">${img}</div>
+                                <div class="event-card-body">
+                                    <div class="event-title">${a.name}</div>
+                                    <div class="event-description">${a.connection}</div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
             </div>
         `;
 
         loaded.artists = true;
-        statusEl.textContent = `${(data.artists || []).length} artists`;
+        statusEl.textContent = `${artists.length} artists discovered`;
 
     } catch (err) {
         showError(`Failed to load artists: ${err.message}`);
