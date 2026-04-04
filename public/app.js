@@ -85,9 +85,14 @@ function renderEventCard(event) {
         : '';
 
     const type = event.type ? `<div class="event-type-tag">${event.type}</div>` : '';
+    const image = event.imageUrl
+        ? `<div class="event-image"><img src="${event.imageUrl}" alt="${title}" loading="lazy"></div>`
+        : '';
 
     return `
         <div class="event-card">
+            ${image}
+            <div class="event-card-body">
             ${type}
             <div class="event-title">${title}</div>
             ${artist}
@@ -96,6 +101,7 @@ function renderEventCard(event) {
             ${dates ? `<div class="event-dates">${dates}</div>` : ''}
             ${description}
             ${link}
+            </div>
         </div>
     `;
 }

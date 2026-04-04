@@ -164,10 +164,31 @@ main {
 
 .event-card {
     background: var(--white);
-    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.event-image {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+    background: var(--gray-100);
+}
+
+.event-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: opacity 0.3s;
+}
+
+.event-card-body {
+    padding: 1.75rem;
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
+    flex: 1;
 }
 
 .event-type-tag {
@@ -225,7 +246,7 @@ main {
 .event-link {
     display: inline-block;
     margin-top: auto;
-    padding-top: 1.25rem;
+    padding-top: 1rem;
     font-size: 0.68rem;
     letter-spacing: 0.1em;
     text-transform: uppercase;

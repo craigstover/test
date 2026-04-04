@@ -319,6 +319,12 @@ const MUSEUM_SOURCES = [
 // Build a lookup map from source name to URL
 const sourceUrlMap = Object.fromEntries(MUSEUM_SOURCES.map(s => [s.name, s.url]));
 
+function extractOgImage(html) {
+  const match = html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i)
+    || html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i);
+  return match ? match[1] : null;
+}
+
 function stripHtml(html) {
   return html
     .replace(/<script[\s\S]*?<\/script>/gi, '')
@@ -337,7 +343,8 @@ app.post('/api/scan-museums', async (req, res) => {
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const html = await response.text();
         const text = stripHtml(html).slice(0, 1500);
-        return { name: source.name, url: source.url, text };
+        const image = extractOgImage(html);
+        return { name: source.name, url: source.url, text, image };
       })
     );
 
@@ -401,9 +408,13 @@ Interests: contemporary sculpture, abstraction, conceptual art, socially engaged
         const jsonString = jsonMatch ? (jsonMatch[1] || jsonMatch[0]) : content;
         const parsed = JSON.parse(jsonString);
 
-        // Attach source URL to each event based on venue name
+        // Build a map of source name -> image for this batch
+        const batchImageMap = Object.fromEntries(batch.map(s => [s.name, s.image]));
+
+        // Attach source URL and image to each event based on venue name
         (parsed.events || []).forEach(event => {
           event.sourceUrl = sourceUrlMap[event.venue] || null;
+          event.imageUrl = batchImageMap[event.venue] || null;
         });
 
         return parsed;
