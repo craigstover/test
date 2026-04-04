@@ -13,13 +13,8 @@
                 <h1><span class="radar-pulse"></span>Sightline</h1>
                 <p class="header-subtitle">art events in and around new york city</p>
             </div>
-            <span class="status" id="status">ready</span>
+            <span class="status" id="status"></span>
         </div>
-        <nav class="main-nav">
-            <button class="nav-btn active" data-section="events">Events</button>
-            <button class="nav-btn" data-section="venues">Venues</button>
-            <button class="nav-btn" data-section="artists">Artists</button>
-        </nav>
     </header>
 
     <main>
@@ -30,14 +25,14 @@
             <p>Scanning</p>
         </div>
 
-        <section id="section-events" class="content-section">
+        <div id="empty-state" class="empty-state">
+            <button id="scanBtn" class="scan-cta">scan for events</button>
+        </div>
+
+        <section id="section-events" class="content-section" style="display:none;">
             <div id="events-active"></div>
             <div id="events-upcoming"></div>
         </section>
-
-        <section id="section-venues" class="content-section" style="display:none;"></section>
-
-        <section id="section-artists" class="content-section" style="display:none;"></section>
     </main>
 
     <script src="app.js"></script>
