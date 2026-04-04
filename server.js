@@ -246,6 +246,7 @@ const MUSEUM_SOURCES = [
   { name: 'Cooper Hewitt',      url: 'https://www.cooperhewitt.org/events/exhibitions' },
   { name: 'Studio Museum in Harlem', url: 'https://studiomuseum.org/exhibitions' },
   { name: 'Dia Chelsea',        url: 'https://www.diaart.org/exhibitions/main' },
+  { name: 'Dia:Beacon',         url: 'https://www.diaart.org/visit/dia-beacon' },
   { name: 'New Museum',         url: 'https://www.newmuseum.org/exhibitions' },
   { name: 'MoMA PS1',           url: 'https://www.momaps1.org/exhibitions' },
   { name: 'The Frick',          url: 'https://www.frick.org/exhibitions' },
