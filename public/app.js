@@ -2,6 +2,7 @@
 const scanBtn = document.getElementById('scanBtn');
 const similarArtistsBtn = document.getElementById('similarArtistsBtn');
 const discoverVenuesBtn = document.getElementById('discoverVenuesBtn');
+const brooklynRailBtn = document.getElementById('brooklynRailBtn');
 const loading = document.getElementById('loading');
 const eventsContainer = document.getElementById('events');
 const errorContainer = document.getElementById('error');
@@ -12,6 +13,7 @@ const statsBar = document.getElementById('statsBar');
 scanBtn.addEventListener('click', () => scanForEvents());
 similarArtistsBtn.addEventListener('click', () => findSimilarArtists());
 discoverVenuesBtn.addEventListener('click', () => discoverVenues());
+brooklynRailBtn.addEventListener('click', () => scanBrooklynRail());
 
 async function scanForEvents() {
     setLoading(true);
@@ -202,11 +204,46 @@ function updateStats(events) {
     statsBar.style.display = 'flex';
 }
 
+async function scanBrooklynRail() {
+    setLoading(true);
+    status.textContent = 'Fetching Brooklyn Rail listings...';
+    errorContainer.style.display = 'none';
+
+    try {
+        const response = await fetch('/api/brooklyn-rail', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        if (data.error) {
+            throw new Error(data.error);
+        }
+
+        displayEvents(data.events);
+        updateStats(data.events);
+        status.textContent = 'Brooklyn Rail scan complete';
+
+    } catch (error) {
+        console.error('Error:', error);
+        showError(`Failed to fetch Brooklyn Rail: ${error.message}`);
+        status.textContent = 'Scan failed';
+    } finally {
+        setLoading(false);
+    }
+}
+
 function setLoading(isLoading) {
     loading.style.display = isLoading ? 'block' : 'none';
     scanBtn.disabled = isLoading;
     similarArtistsBtn.disabled = isLoading;
     discoverVenuesBtn.disabled = isLoading;
+    brooklynRailBtn.disabled = isLoading;
     eventsContainer.style.display = isLoading ? 'none' : 'block';
 }
 

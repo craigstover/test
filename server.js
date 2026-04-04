@@ -169,6 +169,73 @@ Return ONLY JSON (no markdown, no backticks, no preamble):
   }
 });
 
+app.post('/api/brooklyn-rail', async (req, res) => {
+  try {
+    // Fetch Brooklyn Rail ArtSeen listings
+    const response = await fetch('https://brooklynrail.org/artseen/');
+    if (!response.ok) {
+      throw new Error(`Failed to fetch Brooklyn Rail: ${response.status}`);
+    }
+    const html = await response.text();
+
+    // Strip HTML tags to reduce tokens
+    const text = html
+      .replace(/<script[\s\S]*?<\/script>/gi, '')
+      .replace(/<style[\s\S]*?<\/style>/gi, '')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .slice(0, 15000); // Keep within token limits
+
+    const message = await anthropic.messages.create({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 4000,
+      messages: [{
+        role: 'user',
+        content: `Here is the text content from the Brooklyn Rail ArtSeen listings page. Extract all exhibition listings you can find.
+
+Then filter and rank them based on this user's taste profile:
+- Favorite artists: ${userProfile.artists.join(', ')}
+- Preferred venues: ${userProfile.venues.join(', ')}
+- Interests: contemporary sculpture, abstraction, conceptual art, socially engaged practices, installation, materiality
+
+PAGE CONTENT:
+${text}
+
+Return ONLY JSON (no markdown, no backticks, no preamble):
+{
+  "events": [
+    {
+      "title": "Exhibition title",
+      "artist": "Artist name(s)",
+      "venue": "Gallery/Museum name",
+      "dates": "Date range if found, or null",
+      "description": "Brief description from the listing",
+      "matchScore": 85-100 for strong match to taste profile, 70-84 for moderate, 60-69 for loose connection,
+      "tags": ["relevant", "tags"],
+      "isNewVenue": true if venue not in user's preferred venues list
+    }
+  ]
+}`
+      }]
+    });
+
+    const content = message.content[0].text;
+    let jsonMatch = content.match(/```json\s*([\s\S]*?)\s*```/);
+    if (!jsonMatch) {
+      jsonMatch = content.match(/\{[\s\S]*\}/);
+    }
+
+    const jsonString = jsonMatch ? (jsonMatch[1] || jsonMatch[0]) : content;
+    const data = JSON.parse(jsonString);
+
+    res.json(data);
+  } catch (error) {
+    console.error('Error fetching Brooklyn Rail:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Serve the main page
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
