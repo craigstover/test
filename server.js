@@ -552,5 +552,5 @@ app.get('/', (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`NYC Art Radar running on http://localhost:${PORT}`);
+  console.log(`Sightline running on http://localhost:${PORT}`);
 });
