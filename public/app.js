@@ -86,12 +86,12 @@ function renderEventCard(event) {
 
     const type = event.type ? `<div class="event-type-tag">${event.type}</div>` : '';
     const image = event.imageUrl
-        ? `<div class="event-image"><img src="${event.imageUrl}" alt="${title}" loading="lazy"></div>`
+        ? `<img src="${event.imageUrl}" alt="${title}" loading="lazy">`
         : '';
 
     return `
         <div class="event-card">
-            ${image}
+            <div class="event-image">${image}</div>
             <div class="event-card-body">
             ${type}
             <div class="event-title">${title}</div>
