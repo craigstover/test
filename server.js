@@ -314,6 +314,8 @@ const MUSEUM_SOURCES = [
   { name: 'Public Art Fund',    url: 'https://www.publicartfund.org/exhibitions' },
   // Press / Listings
   { name: 'Brooklyn Rail',      url: 'https://brooklynrail.org/artseen/' },
+  { name: 'Artforum',           url: 'https://www.artforum.com/exhibitions' },
+  { name: 'Frieze Magazine',    url: 'https://www.frieze.com/exhibitions' },
 ];
 
 // Build a lookup map from source name to URL
