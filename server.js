@@ -401,7 +401,11 @@ Interests: contemporary sculpture, abstraction, conceptual art, socially engaged
           max_tokens: 2000,
           messages: [{
             role: 'user',
-            content: `Today is ${today}. Extract exhibition listings from the page content below. Only include exhibitions that are currently active or upcoming (not past). Use the venue name exactly as it appears in the === source header ===.\n\nTaste profile for context:\n${tasteProfile}\n\nLISTINGS:\n${combined}\n\nReturn ONLY JSON (no markdown, no backticks):\n${jsonSchema}`
+            content: `Today is ${today}. Extract exhibition listings from the page content below. Only include exhibitions that are currently active or upcoming (not past). Use the venue name exactly as it appears in the === source header ===.
+
+Only include events located in New York City (Manhattan, Brooklyn, Queens, Bronx, Staten Island), Long Island, upstate New York, or other nearby East Coast locations (Connecticut, Massachusetts, New Jersey, Pennsylvania). Exclude any events outside this region.
+
+Taste profile for context:\n${tasteProfile}\n\nLISTINGS:\n${combined}\n\nReturn ONLY JSON (no markdown, no backticks):\n${jsonSchema}`
           }]
         });
 
