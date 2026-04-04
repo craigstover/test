@@ -246,9 +246,23 @@ const MUSEUM_SOURCES = [
   // Long Island
   { name: 'Parrish Art Museum', url: 'https://www.parrishart.org/exhibitions' },
   { name: 'Guild Hall',         url: 'https://www.guildhall.org/exhibitions' },
-  // Upstate / Hudson Valley
+  // Upstate / Hudson Valley / Catskills
   { name: 'Dia:Beacon',         url: 'https://www.diaart.org/exhibitions/main' },
   { name: 'Storm King',         url: 'https://stormking.org/exhibitions' },
+  { name: 'Upstate Art Weekend', url: 'https://www.upstateartweekend.com' },
+  { name: 'MASS MoCA',          url: 'https://massmoca.org/exhibitions' },
+  { name: 'Basilica Hudson',    url: 'https://basilicahudson.org' },
+  { name: 'The School (Jack Shainman)', url: 'https://theschoolkinderhook.com' },
+  { name: 'Bard CCS',           url: 'https://ccs.bard.edu/exhibitions' },
+  { name: 'Longhouse Reserve',  url: 'https://longhouse.org/programs' },
+  { name: 'Fridman Gallery',    url: 'https://www.fridmangallery.com/exhibitions' },
+  // Capital Region / Troy / Albany
+  { name: 'Collar Works',       url: 'https://collarworks.org' },
+  { name: 'Albany Center Gallery', url: 'https://www.albanycenter.org' },
+  { name: 'Arts Center of the Capital Region', url: 'https://artscenteronline.org' },
+  // Catskills / Woodstock
+  { name: 'Woodstock Artists Association', url: 'https://woodstockart.org' },
+  { name: 'Kleinert/James Center', url: 'https://woodstockguild.org/kleinert-james' },
   // Art Fairs
   { name: 'Frieze New York',    url: 'https://www.frieze.com/fairs/frieze-new-york' },
   { name: 'The Armory Show',    url: 'https://www.thearmoryshow.com' },
