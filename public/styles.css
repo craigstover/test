@@ -103,19 +103,20 @@ h1 {
 }
 
 .scan-cta {
-    background: none;
+    background: var(--black);
     border: none;
     font-family: inherit;
     font-weight: 500;
-    font-size: 2rem;
-    color: var(--gray-300);
+    font-size: 1rem;
+    color: var(--white);
     cursor: pointer;
-    transition: color 0.2s;
-    padding: 0;
+    padding: 1rem 2.5rem;
+    transition: background 0.2s;
+    letter-spacing: 0.01em;
 }
 
 .scan-cta:hover {
-    color: var(--black);
+    background: var(--gray-700);
 }
 
 /* ── Main ────────────────────────────────────────────────────────────────── */
