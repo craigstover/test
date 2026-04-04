@@ -238,16 +238,29 @@ Return ONLY JSON (no markdown, no backticks, no preamble):
 
 const MUSEUM_SOURCES = [
   // NYC Museums
+  { name: 'The Met',            url: 'https://www.metmuseum.org/exhibitions' },
   { name: 'MoMA',               url: 'https://www.moma.org/calendar/exhibitions' },
   { name: 'Whitney',            url: 'https://whitney.org/exhibitions' },
   { name: 'Guggenheim',         url: 'https://www.guggenheim.org/exhibitions' },
+  { name: 'Brooklyn Museum',    url: 'https://www.brooklynmuseum.org/exhibitions' },
+  { name: 'Cooper Hewitt',      url: 'https://www.cooperhewitt.org/events/exhibitions' },
+  { name: 'Studio Museum in Harlem', url: 'https://studiomuseum.org/exhibitions' },
+  { name: 'Dia Chelsea',        url: 'https://www.diaart.org/exhibitions/main' },
   { name: 'New Museum',         url: 'https://www.newmuseum.org/exhibitions' },
   { name: 'MoMA PS1',           url: 'https://www.momaps1.org/exhibitions' },
+  { name: 'The Frick',          url: 'https://www.frick.org/exhibitions' },
+  { name: 'The Drawing Center', url: 'https://www.drawingcenter.org/exhibitions' },
+  { name: 'ICP',                url: 'https://www.icp.org/exhibitions' },
+  { name: 'El Museo del Barrio', url: 'https://www.elmuseo.org/exhibitions' },
+  { name: 'Bronx Museum',       url: 'https://www.bronxmuseum.org/exhibitions' },
+  { name: 'Queens Museum',      url: 'https://queensmuseum.org/exhibitions' },
+  { name: 'Noguchi Museum',     url: 'https://www.noguchi.org/programs/exhibitions' },
+  { name: 'SculptureCenter',    url: 'https://www.sculpture-center.org/exhibitions' },
   // Long Island
   { name: 'Parrish Art Museum', url: 'https://www.parrishart.org/exhibitions' },
   { name: 'Guild Hall',         url: 'https://www.guildhall.org/exhibitions' },
   // Upstate / Hudson Valley / Catskills
-  { name: 'Dia:Beacon',         url: 'https://www.diaart.org/exhibitions/main' },
+  { name: 'Dia:Beacon',         url: 'https://www.diaart.org/visit/dia-beacon' },
   { name: 'Storm King',         url: 'https://stormking.org/exhibitions' },
   { name: 'Upstate Art Weekend', url: 'https://www.upstateartweekend.com' },
   { name: 'MASS MoCA',          url: 'https://massmoca.org/exhibitions' },
@@ -352,7 +365,7 @@ app.post('/api/scan-museums', async (req, res) => {
         const response = await fetch(source.url, { signal: AbortSignal.timeout(10000) });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const html = await response.text();
-        const text = stripHtml(html).slice(0, 1500);
+        const text = stripHtml(html).slice(0, 2500);
         const image = extractOgImage(html);
         return { name: source.name, url: source.url, text, image };
       })
