@@ -416,6 +416,7 @@ Interests: contemporary sculpture, abstraction, conceptual art, socially engaged
       "city": "City name, e.g. New York, Beacon, North Adams, East Hampton",
       "state": "Two-letter state code, e.g. NY, MA",
       "dates": "Date range as found on the page, or null",
+      "startDate": "Start date in YYYY-MM-DD format, or null if unknown",
       "description": "1-3 sentence summary of the exhibition",
       "type": "one of: art fair, gallery show, museum show, public art, performance, residency",
       "imageUrl": "URL from the nearest [img:URL] marker in the listing, or null if none found",
@@ -465,6 +466,14 @@ Taste profile for context:\n${tasteProfile}\n\nLISTINGS:\n${combined}\n\nReturn 
     const allEvents = batchResults
       .filter(r => r.status === 'fulfilled')
       .flatMap(r => r.value.events || []);
+
+    // Sort by startDate ascending; events without a date go to the end
+    allEvents.sort((a, b) => {
+      if (!a.startDate && !b.startDate) return 0;
+      if (!a.startDate) return 1;
+      if (!b.startDate) return -1;
+      return a.startDate.localeCompare(b.startDate);
+    });
 
     const data = { events: allEvents };
     if (failed.length > 0) data.failedSources = failed;
