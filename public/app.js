@@ -208,7 +208,7 @@ function updateStats(events) {
 
 async function scanMuseums() {
     setLoading(true);
-    status.textContent = 'Scanning museums...';
+    status.textContent = 'Scanning museums, fairs & public art...';
     errorContainer.style.display = 'none';
 
     try {

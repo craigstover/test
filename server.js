@@ -237,15 +237,27 @@ Return ONLY JSON (no markdown, no backticks, no preamble):
 });
 
 const MUSEUM_SOURCES = [
-  { name: 'MoMA',        url: 'https://www.moma.org/calendar/exhibitions' },
-  { name: 'Whitney',     url: 'https://whitney.org/exhibitions' },
-  { name: 'Guggenheim',  url: 'https://www.guggenheim.org/exhibitions' },
-  { name: 'New Museum',  url: 'https://www.newmuseum.org/exhibitions' },
-  { name: 'MoMA PS1',    url: 'https://www.momaps1.org/exhibitions' },
+  // NYC Museums
+  { name: 'MoMA',               url: 'https://www.moma.org/calendar/exhibitions' },
+  { name: 'Whitney',            url: 'https://whitney.org/exhibitions' },
+  { name: 'Guggenheim',         url: 'https://www.guggenheim.org/exhibitions' },
+  { name: 'New Museum',         url: 'https://www.newmuseum.org/exhibitions' },
+  { name: 'MoMA PS1',           url: 'https://www.momaps1.org/exhibitions' },
+  // Long Island
   { name: 'Parrish Art Museum', url: 'https://www.parrishart.org/exhibitions' },
-  { name: 'Guild Hall',  url: 'https://www.guildhall.org/exhibitions' },
-  { name: 'Dia:Beacon',  url: 'https://www.diaart.org/exhibitions/main' },
-  { name: 'Storm King',  url: 'https://stormking.org/exhibitions' },
+  { name: 'Guild Hall',         url: 'https://www.guildhall.org/exhibitions' },
+  // Upstate / Hudson Valley
+  { name: 'Dia:Beacon',         url: 'https://www.diaart.org/exhibitions/main' },
+  { name: 'Storm King',         url: 'https://stormking.org/exhibitions' },
+  // Art Fairs
+  { name: 'Frieze New York',    url: 'https://www.frieze.com/fairs/frieze-new-york' },
+  { name: 'The Armory Show',    url: 'https://www.thearmoryshow.com' },
+  { name: 'The Other Art Fair', url: 'https://www.theotherartfair.com/brooklyn' },
+  { name: 'NADA New York',      url: 'https://newartdealers.org/fairs' },
+  { name: 'The Art Show',       url: 'https://theartshow.org' },
+  { name: 'Art on Paper',       url: 'https://www.artonpaperfair.com' },
+  // Public Art
+  { name: 'Public Art Fund',    url: 'https://www.publicartfund.org/exhibitions' },
 ];
 
 function stripHtml(html) {
