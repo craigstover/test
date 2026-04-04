@@ -1,289 +1,189 @@
-// UI Elements
-const scanBtn = document.getElementById('scanBtn');
-const similarArtistsBtn = document.getElementById('similarArtistsBtn');
-const discoverVenuesBtn = document.getElementById('discoverVenuesBtn');
-const brooklynRailBtn = document.getElementById('brooklynRailBtn');
-const scanMuseumsBtn = document.getElementById('scanMuseumsBtn');
-const loading = document.getElementById('loading');
-const eventsContainer = document.getElementById('events');
-const errorContainer = document.getElementById('error');
-const status = document.getElementById('status');
-const statsBar = document.getElementById('statsBar');
+const statusEl = document.getElementById('status');
+const loadingEl = document.getElementById('loading');
+const errorEl = document.getElementById('error');
+const navBtns = document.querySelectorAll('.nav-btn');
 
-// Event listeners
-scanBtn.addEventListener('click', () => scanForEvents());
-similarArtistsBtn.addEventListener('click', () => findSimilarArtists());
-discoverVenuesBtn.addEventListener('click', () => discoverVenues());
-brooklynRailBtn.addEventListener('click', () => scanBrooklynRail());
-scanMuseumsBtn.addEventListener('click', () => scanMuseums());
+// Section state — track if each section has been loaded
+const loaded = { events: false, venues: false, artists: false };
 
-async function scanForEvents() {
-    setLoading(true);
-    status.textContent = 'Scanning sources...';
-    errorContainer.style.display = 'none';
+// Nav tab switching
+navBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+        const section = btn.dataset.section;
+        navBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        document.querySelectorAll('.content-section').forEach(s => s.style.display = 'none');
+        document.getElementById(`section-${section}`).style.display = 'block';
+        if (!loaded[section]) loadSection(section);
+    });
+});
+
+function loadSection(section) {
+    if (section === 'events') loadEvents();
+    if (section === 'venues') loadVenues();
+    if (section === 'artists') loadArtists();
+}
+
+// ── Events ────────────────────────────────────────────────────────────────────
+
+async function loadEvents() {
+    setLoading(true, 'Scanning sources...');
+    errorEl.style.display = 'none';
 
     try {
-        const response = await fetch('/api/scan-events', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        });
-
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const data = await response.json();
-
-        if (data.error) {
-            throw new Error(data.error);
-        }
-
-        displayEvents(data.events);
-        updateStats(data.events);
-        status.textContent = 'Scan complete';
-
-    } catch (error) {
-        console.error('Error:', error);
-        showError(`Failed to scan events: ${error.message}`);
-        status.textContent = 'Scan failed';
-    } finally {
-        setLoading(false);
-    }
-}
-
-async function findSimilarArtists() {
-    setLoading(true);
-    status.textContent = 'Finding similar artists...';
-    errorContainer.style.display = 'none';
-
-    try {
-        const response = await fetch('/api/similar-artists', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        });
-
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const data = await response.json();
-
-        if (data.error) {
-            throw new Error(data.error);
-        }
-
-        displaySimilarArtists(data.artists);
-        status.textContent = 'Artists found';
-
-    } catch (error) {
-        console.error('Error:', error);
-        showError(`Failed to find similar artists: ${error.message}`);
-        status.textContent = 'Search failed';
-    } finally {
-        setLoading(false);
-    }
-}
-
-async function discoverVenues() {
-    setLoading(true);
-    status.textContent = 'Discovering venues...';
-    errorContainer.style.display = 'none';
-
-    try {
-        const response = await fetch('/api/discover-venues', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        });
-
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const data = await response.json();
-
-        if (data.error) {
-            throw new Error(data.error);
-        }
-
-        displayVenues(data.venues);
-        status.textContent = 'Venues found';
-
-    } catch (error) {
-        console.error('Error:', error);
-        showError(`Failed to discover venues: ${error.message}`);
-        status.textContent = 'Search failed';
-    } finally {
-        setLoading(false);
-    }
-}
-
-function displayEvents(events) {
-    if (!events || events.length === 0) {
-        eventsContainer.innerHTML = '<div class="empty-state"><h3>No events found</h3><p>Try scanning again</p></div>';
-        return;
-    }
-
-    // Sort by match score
-    events.sort((a, b) => b.matchScore - a.matchScore);
-
-    const html = `
-        <div class="events-grid">
-            ${events.map(event => `
-                <div class="event-card">
-                    <div class="event-header">
-                        <div class="event-type">${event.type}</div>
-                        <div class="match-score">${event.matchScore}% match</div>
-                    </div>
-                    <div class="event-title">${event.title}</div>
-                    <div class="event-artist">${event.artist}</div>
-                    <div class="event-venue">${event.venue}${event.isNewVenue ? ' ✦' : ''}</div>
-                    <div class="event-dates">${event.dates}</div>
-                    <div class="event-description">${event.description}</div>
-                    <div class="event-tags">
-                        ${event.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
-                    </div>
-                </div>
-            `).join('')}
-        </div>
-    `;
-
-    eventsContainer.innerHTML = html;
-}
-
-function displaySimilarArtists(artists) {
-    const html = `
-        <div class="events-grid">
-            ${artists.map(artist => `
-                <div class="event-card">
-                    <div class="event-header">
-                        <div class="event-type">Artist</div>
-                    </div>
-                    <div class="event-title">${artist.name}</div>
-                    <div class="event-description">${artist.connection}</div>
-                    ${artist.currentShow ? `<div class="event-dates" style="margin-top: 0.75rem;">Currently: ${artist.currentShow}</div>` : ''}
-                </div>
-            `).join('')}
-        </div>
-    `;
-
-    eventsContainer.innerHTML = html;
-    statsBar.style.display = 'none';
-}
-
-function displayVenues(venues) {
-    const html = `
-        <div class="events-grid">
-            ${venues.map(venue => `
-                <div class="event-card">
-                    <div class="event-header">
-                        <div class="event-type">Venue</div>
-                    </div>
-                    <div class="event-title">${venue.name}</div>
-                    <div class="event-venue">${venue.neighborhood}</div>
-                    <div class="event-description" style="margin-top: 0.75rem;"><strong>Focus:</strong> ${venue.focus}</div>
-                    <div class="event-description">${venue.reason}</div>
-                </div>
-            `).join('')}
-        </div>
-    `;
-
-    eventsContainer.innerHTML = html;
-    statsBar.style.display = 'none';
-}
-
-function updateStats(events) {
-    document.getElementById('eventCount').textContent = events.length;
-    document.getElementById('highMatchCount').textContent =
-        events.filter(e => e.matchScore >= 85).length;
-    document.getElementById('venueCount').textContent =
-        events.filter(e => e.isNewVenue).length;
-    statsBar.style.display = 'flex';
-}
-
-async function scanMuseums() {
-    setLoading(true);
-    status.textContent = 'Scanning museums, fairs & public art...';
-    errorContainer.style.display = 'none';
-
-    try {
-        const response = await fetch('/api/scan-museums', {
+        const res = await fetch('/api/scan-museums', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' }
         });
-
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-
-        const data = await response.json();
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
         if (data.error) throw new Error(data.error);
 
-        displayEvents(data.events);
-        updateStats(data.events);
+        const active = (data.events || []).filter(e => !e.isUpcoming);
+        const upcoming = (data.events || []).filter(e => e.isUpcoming);
 
-        const note = data.failedSources && data.failedSources.length > 0
-            ? ` (${data.failedSources.join(', ')} unavailable)`
-            : '';
-        status.textContent = `Museum scan complete${note}`;
+        renderEventGroup('events-active', 'Now On', active);
+        renderEventGroup('events-upcoming', 'Upcoming', upcoming);
 
-    } catch (error) {
-        console.error('Error:', error);
-        showError(`Failed to scan museums: ${error.message}`);
-        status.textContent = 'Scan failed';
+        loaded.events = true;
+        const note = data.failedSources?.length ? ` — ${data.failedSources.length} sources unavailable` : '';
+        statusEl.textContent = `${active.length + upcoming.length} events${note}`;
+
+    } catch (err) {
+        showError(`Failed to load events: ${err.message}`);
+        statusEl.textContent = 'Error';
     } finally {
         setLoading(false);
     }
 }
 
-async function scanBrooklynRail() {
-    setLoading(true);
-    status.textContent = 'Fetching Brooklyn Rail listings...';
-    errorContainer.style.display = 'none';
+function renderEventGroup(containerId, label, events) {
+    const container = document.getElementById(containerId);
+    if (!events.length) {
+        container.innerHTML = '';
+        return;
+    }
+    container.innerHTML = `
+        <h2 class="section-label">${label}</h2>
+        <div class="events-grid">
+            ${events.map(renderEventCard).join('')}
+        </div>
+    `;
+}
+
+function renderEventCard(event) {
+    const title = event.title || 'Untitled';
+    const venue = event.venue || '';
+    const dates = event.dates || '';
+    const artist = event.artist && event.artist !== 'null' ? `<div class="event-artist">${event.artist}</div>` : '';
+    const link = event.sourceUrl
+        ? `<a class="event-link" href="${event.sourceUrl}" target="_blank" rel="noopener">View source ↗</a>`
+        : '';
+
+    return `
+        <div class="event-card">
+            <div class="event-title">${title}</div>
+            ${artist}
+            <div class="event-venue">${venue}</div>
+            ${dates ? `<div class="event-dates">${dates}</div>` : ''}
+            ${link}
+        </div>
+    `;
+}
+
+// ── Venues ────────────────────────────────────────────────────────────────────
+
+async function loadVenues() {
+    setLoading(true, 'Finding venues...');
+    errorEl.style.display = 'none';
 
     try {
-        const response = await fetch('/api/brooklyn-rail', {
+        const res = await fetch('/api/discover-venues', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' }
         });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        if (data.error) throw new Error(data.error);
 
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
+        const container = document.getElementById('section-venues');
+        container.innerHTML = `
+            <div class="events-grid">
+                ${(data.venues || []).map(v => `
+                    <div class="event-card">
+                        <div class="event-title">${v.name}</div>
+                        <div class="event-venue">${v.neighborhood}</div>
+                        <div class="event-description">${v.focus}</div>
+                        <div class="event-description" style="margin-top:0.5rem;">${v.reason}</div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
 
-        const data = await response.json();
+        loaded.venues = true;
+        statusEl.textContent = `${(data.venues || []).length} venues`;
 
-        if (data.error) {
-            throw new Error(data.error);
-        }
-
-        displayEvents(data.events);
-        updateStats(data.events);
-        status.textContent = 'Brooklyn Rail scan complete';
-
-    } catch (error) {
-        console.error('Error:', error);
-        showError(`Failed to fetch Brooklyn Rail: ${error.message}`);
-        status.textContent = 'Scan failed';
+    } catch (err) {
+        showError(`Failed to load venues: ${err.message}`);
+        statusEl.textContent = 'Error';
     } finally {
         setLoading(false);
     }
 }
 
-function setLoading(isLoading) {
-    loading.style.display = isLoading ? 'block' : 'none';
-    scanBtn.disabled = isLoading;
-    similarArtistsBtn.disabled = isLoading;
-    discoverVenuesBtn.disabled = isLoading;
-    brooklynRailBtn.disabled = isLoading;
-    scanMuseumsBtn.disabled = isLoading;
-    eventsContainer.style.display = isLoading ? 'none' : 'block';
+// ── Artists ───────────────────────────────────────────────────────────────────
+
+async function loadArtists() {
+    setLoading(true, 'Finding artists...');
+    errorEl.style.display = 'none';
+
+    try {
+        const res = await fetch('/api/similar-artists', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        if (data.error) throw new Error(data.error);
+
+        const container = document.getElementById('section-artists');
+        container.innerHTML = `
+            <div class="events-grid">
+                ${(data.artists || []).map(a => `
+                    <div class="event-card">
+                        <div class="event-title">${a.name}</div>
+                        <div class="event-description">${a.connection}</div>
+                        ${a.currentShow ? `<div class="event-dates" style="margin-top:0.75rem;">${a.currentShow}</div>` : ''}
+                    </div>
+                `).join('')}
+            </div>
+        `;
+
+        loaded.artists = true;
+        statusEl.textContent = `${(data.artists || []).length} artists`;
+
+    } catch (err) {
+        showError(`Failed to load artists: ${err.message}`);
+        statusEl.textContent = 'Error';
+    } finally {
+        setLoading(false);
+    }
+}
+
+// ── Utilities ─────────────────────────────────────────────────────────────────
+
+function setLoading(isLoading, message = '') {
+    loadingEl.style.display = isLoading ? 'block' : 'none';
+    document.querySelectorAll('.content-section').forEach(s => {
+        s.style.opacity = isLoading ? '0.4' : '1';
+    });
+    if (message) statusEl.textContent = message;
 }
 
 function showError(message) {
-    errorContainer.innerHTML = `<div class="error">${message}</div>`;
-    errorContainer.style.display = 'block';
+    errorEl.innerHTML = `<div class="error">${message}</div>`;
+    errorEl.style.display = 'block';
 }
+
+// Auto-load events on page load
+loadEvents();

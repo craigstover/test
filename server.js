@@ -272,7 +272,12 @@ const MUSEUM_SOURCES = [
   { name: 'Art on Paper',       url: 'https://www.artonpaperfair.com' },
   // Public Art
   { name: 'Public Art Fund',    url: 'https://www.publicartfund.org/exhibitions' },
+  // Press / Listings
+  { name: 'Brooklyn Rail',      url: 'https://brooklynrail.org/artseen/' },
 ];
+
+// Build a lookup map from source name to URL
+const sourceUrlMap = Object.fromEntries(MUSEUM_SOURCES.map(s => [s.name, s.url]));
 
 function stripHtml(html) {
   return html
@@ -292,7 +297,7 @@ app.post('/api/scan-museums', async (req, res) => {
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const html = await response.text();
         const text = stripHtml(html).slice(0, 1500);
-        return { name: source.name, text };
+        return { name: source.name, url: source.url, text };
       })
     );
 
@@ -323,16 +328,16 @@ Interests: contemporary sculpture, abstraction, conceptual art, socially engaged
   "events": [
     {
       "title": "Exhibition title",
-      "artist": "Artist name(s)",
-      "venue": "Venue name",
-      "dates": "Date range if found, or null",
-      "description": "Brief description",
-      "matchScore": 85-100 strong match, 70-84 moderate, 60-69 loose connection,
-      "tags": ["relevant", "tags"],
-      "isNewVenue": true if venue not in user's preferred venues list
+      "artist": "Artist name(s) or null if not listed",
+      "venue": "Venue name exactly as it appears in the source header",
+      "dates": "Date range as found on the page, or null",
+      "isUpcoming": true if the exhibition has not yet opened, false if currently active,
+      "tags": ["relevant", "tags"]
     }
   ]
 }`;
+
+    const today = new Date().toISOString().split('T')[0];
 
     const batchResults = await Promise.allSettled(
       batches.map(async (batch) => {
@@ -342,7 +347,7 @@ Interests: contemporary sculpture, abstraction, conceptual art, socially engaged
           max_tokens: 2000,
           messages: [{
             role: 'user',
-            content: `Extract exhibition listings from the page content below, then filter and rank by this taste profile:\n\n${tasteProfile}\n\nLISTINGS:\n${combined}\n\nReturn ONLY JSON (no markdown, no backticks):\n${jsonSchema}`
+            content: `Today is ${today}. Extract exhibition listings from the page content below. Only include exhibitions that are currently active or upcoming (not past). Use the venue name exactly as it appears in the === source header ===.\n\nTaste profile for context:\n${tasteProfile}\n\nLISTINGS:\n${combined}\n\nReturn ONLY JSON (no markdown, no backticks):\n${jsonSchema}`
           }]
         });
 
@@ -350,16 +355,20 @@ Interests: contemporary sculpture, abstraction, conceptual art, socially engaged
         let jsonMatch = content.match(/```json\s*([\s\S]*?)\s*```/);
         if (!jsonMatch) jsonMatch = content.match(/\{[\s\S]*\}/);
         const jsonString = jsonMatch ? (jsonMatch[1] || jsonMatch[0]) : content;
-        return JSON.parse(jsonString);
+        const parsed = JSON.parse(jsonString);
+
+        // Attach source URL to each event based on venue name
+        (parsed.events || []).forEach(event => {
+          event.sourceUrl = sourceUrlMap[event.venue] || null;
+        });
+
+        return parsed;
       })
     );
 
-    // Merge all events, sort by matchScore
     const allEvents = batchResults
       .filter(r => r.status === 'fulfilled')
       .flatMap(r => r.value.events || []);
-
-    allEvents.sort((a, b) => b.matchScore - a.matchScore);
 
     const data = { events: allEvents };
     if (failed.length > 0) data.failedSources = failed;
