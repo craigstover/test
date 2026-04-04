@@ -330,6 +330,8 @@ Interests: contemporary sculpture, abstraction, conceptual art, socially engaged
       "title": "Exhibition title",
       "artist": "Artist name(s) or null if not listed",
       "venue": "Venue name exactly as it appears in the source header",
+      "city": "City name, e.g. New York, Beacon, North Adams, East Hampton",
+      "state": "Two-letter state code, e.g. NY, MA",
       "dates": "Date range as found on the page, or null",
       "isUpcoming": true if the exhibition has not yet opened, false if currently active,
       "tags": ["relevant", "tags"]

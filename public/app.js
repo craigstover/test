@@ -78,6 +78,7 @@ function renderEventCard(event) {
     const venue = event.venue || '';
     const dates = event.dates || '';
     const artist = event.artist && event.artist !== 'null' ? `<div class="event-artist">${event.artist}</div>` : '';
+    const location = event.city && event.state ? `<div class="event-location">${event.city}, ${event.state}</div>` : '';
     const link = event.sourceUrl
         ? `<a class="event-link" href="${event.sourceUrl}" target="_blank" rel="noopener">View source ↗</a>`
         : '';
@@ -87,6 +88,7 @@ function renderEventCard(event) {
             <div class="event-title">${title}</div>
             ${artist}
             <div class="event-venue">${venue}</div>
+            ${location}
             ${dates ? `<div class="event-dates">${dates}</div>` : ''}
             ${link}
         </div>
