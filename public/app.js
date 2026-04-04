@@ -3,6 +3,7 @@ const scanBtn = document.getElementById('scanBtn');
 const similarArtistsBtn = document.getElementById('similarArtistsBtn');
 const discoverVenuesBtn = document.getElementById('discoverVenuesBtn');
 const brooklynRailBtn = document.getElementById('brooklynRailBtn');
+const scanMuseumsBtn = document.getElementById('scanMuseumsBtn');
 const loading = document.getElementById('loading');
 const eventsContainer = document.getElementById('events');
 const errorContainer = document.getElementById('error');
@@ -14,6 +15,7 @@ scanBtn.addEventListener('click', () => scanForEvents());
 similarArtistsBtn.addEventListener('click', () => findSimilarArtists());
 discoverVenuesBtn.addEventListener('click', () => discoverVenues());
 brooklynRailBtn.addEventListener('click', () => scanBrooklynRail());
+scanMuseumsBtn.addEventListener('click', () => scanMuseums());
 
 async function scanForEvents() {
     setLoading(true);
@@ -204,6 +206,39 @@ function updateStats(events) {
     statsBar.style.display = 'flex';
 }
 
+async function scanMuseums() {
+    setLoading(true);
+    status.textContent = 'Scanning museums...';
+    errorContainer.style.display = 'none';
+
+    try {
+        const response = await fetch('/api/scan-museums', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        });
+
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+        const data = await response.json();
+        if (data.error) throw new Error(data.error);
+
+        displayEvents(data.events);
+        updateStats(data.events);
+
+        const note = data.failedSources && data.failedSources.length > 0
+            ? ` (${data.failedSources.join(', ')} unavailable)`
+            : '';
+        status.textContent = `Museum scan complete${note}`;
+
+    } catch (error) {
+        console.error('Error:', error);
+        showError(`Failed to scan museums: ${error.message}`);
+        status.textContent = 'Scan failed';
+    } finally {
+        setLoading(false);
+    }
+}
+
 async function scanBrooklynRail() {
     setLoading(true);
     status.textContent = 'Fetching Brooklyn Rail listings...';
@@ -244,6 +279,7 @@ function setLoading(isLoading) {
     similarArtistsBtn.disabled = isLoading;
     discoverVenuesBtn.disabled = isLoading;
     brooklynRailBtn.disabled = isLoading;
+    scanMuseumsBtn.disabled = isLoading;
     eventsContainer.style.display = isLoading ? 'none' : 'block';
 }
 

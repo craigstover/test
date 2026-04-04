@@ -236,6 +236,106 @@ Return ONLY JSON (no markdown, no backticks, no preamble):
   }
 });
 
+const MUSEUM_SOURCES = [
+  { name: 'MoMA',        url: 'https://www.moma.org/calendar/exhibitions' },
+  { name: 'Whitney',     url: 'https://whitney.org/exhibitions' },
+  { name: 'Guggenheim',  url: 'https://www.guggenheim.org/exhibitions' },
+  { name: 'New Museum',  url: 'https://www.newmuseum.org/exhibitions' },
+  { name: 'MoMA PS1',    url: 'https://www.momaps1.org/exhibitions' },
+  { name: 'Parrish Art Museum', url: 'https://www.parrishart.org/exhibitions' },
+  { name: 'Guild Hall',  url: 'https://www.guildhall.org/exhibitions' },
+  { name: 'Dia:Beacon',  url: 'https://www.diaart.org/exhibitions/main' },
+  { name: 'Storm King',  url: 'https://stormking.org/exhibitions' },
+];
+
+function stripHtml(html) {
+  return html
+    .replace(/<script[\s\S]*?<\/script>/gi, '')
+    .replace(/<style[\s\S]*?<\/style>/gi, '')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+app.post('/api/scan-museums', async (req, res) => {
+  try {
+    // Fetch all museum pages in parallel
+    const results = await Promise.allSettled(
+      MUSEUM_SOURCES.map(async (source) => {
+        const response = await fetch(source.url, { signal: AbortSignal.timeout(10000) });
+        if (!response.ok) throw new Error(`${source.name}: HTTP ${response.status}`);
+        const html = await response.text();
+        const text = stripHtml(html).slice(0, 3000);
+        return { name: source.name, text };
+      })
+    );
+
+    const successful = results
+      .filter(r => r.status === 'fulfilled')
+      .map(r => r.value);
+
+    const failed = results
+      .filter(r => r.status === 'rejected')
+      .map((r, i) => MUSEUM_SOURCES[i].name);
+
+    if (successful.length === 0) {
+      throw new Error('All museum sources failed to load');
+    }
+
+    const combined = successful
+      .map(s => `=== ${s.name} ===\n${s.text}`)
+      .join('\n\n');
+
+    const message = await anthropic.messages.create({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 4000,
+      messages: [{
+        role: 'user',
+        content: `Below are current exhibition listings fetched from major museum websites. Extract all exhibitions you can find, then filter and rank them based on this user's taste profile:
+
+Favorite artists: ${userProfile.artists.join(', ')}
+Preferred venues: ${userProfile.venues.join(', ')}
+Interests: contemporary sculpture, abstraction, conceptual art, socially engaged practices, installation, materiality
+
+LISTINGS:
+${combined}
+
+Return ONLY JSON (no markdown, no backticks, no preamble):
+{
+  "events": [
+    {
+      "title": "Exhibition title",
+      "artist": "Artist name(s)",
+      "venue": "Museum name",
+      "dates": "Date range if found, or null",
+      "description": "Brief description",
+      "matchScore": 85-100 strong match, 70-84 moderate, 60-69 loose connection,
+      "tags": ["relevant", "tags"],
+      "isNewVenue": true if venue not in user's preferred venues list
+    }
+  ]
+}`
+      }]
+    });
+
+    const content = message.content[0].text;
+    let jsonMatch = content.match(/```json\s*([\s\S]*?)\s*```/);
+    if (!jsonMatch) jsonMatch = content.match(/\{[\s\S]*\}/);
+
+    const jsonString = jsonMatch ? (jsonMatch[1] || jsonMatch[0]) : content;
+    const data = JSON.parse(jsonString);
+
+    if (failed.length > 0) {
+      data.failedSources = failed;
+    }
+
+    res.json(data);
+  } catch (error) {
+    console.error('Error scanning museums:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Serve the main page
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
