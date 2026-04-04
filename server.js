@@ -336,6 +336,9 @@ const MUSEUM_SOURCES = [
   { name: 'Brooklyn Rail',      url: 'https://brooklynrail.org/artseen/' },
   { name: 'Artforum',           url: 'https://www.artforum.com/exhibitions' },
   { name: 'Frieze Magazine',    url: 'https://www.frieze.com/exhibitions' },
+  { name: 'Hyperallergic',      url: 'https://hyperallergic.com/exhibitions/' },
+  { name: 'Time Out New York',  url: 'https://www.timeout.com/newyork/art/best-art-exhibitions-in-nyc-right-now' },
+  { name: 'New York Magazine',  url: 'https://nymag.com/arts-and-entertainment/art/' },
 ];
 
 // Build a lookup map from source name to URL
@@ -363,7 +366,16 @@ app.post('/api/scan-museums', async (req, res) => {
     // Fetch all pages in parallel with a 10s timeout each
     const fetchResults = await Promise.allSettled(
       MUSEUM_SOURCES.map(async (source) => {
-        const response = await fetch(source.url, { signal: AbortSignal.timeout(10000) });
+        const response = await fetch(source.url, {
+          signal: AbortSignal.timeout(10000),
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+            'Accept-Language': 'en-US,en;q=0.9',
+            'Accept-Encoding': 'gzip, deflate, br',
+            'Cache-Control': 'no-cache',
+          }
+        });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const html = await response.text();
         const text = stripHtml(html).slice(0, 2500);
