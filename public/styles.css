@@ -203,6 +203,13 @@ main {
     color: var(--gray-500);
 }
 
+.event-description {
+    font-size: 0.88rem;
+    color: var(--gray-700);
+    line-height: 1.55;
+    margin-top: 0.5rem;
+}
+
 .event-link {
     display: inline-block;
     margin-top: auto;
