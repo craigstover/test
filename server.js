@@ -334,6 +334,7 @@ Interests: contemporary sculpture, abstraction, conceptual art, socially engaged
       "state": "Two-letter state code, e.g. NY, MA",
       "dates": "Date range as found on the page, or null",
       "description": "1-3 sentence summary of the exhibition",
+      "type": "one of: art fair, gallery show, museum show, public art, performance, residency",
       "isUpcoming": true if the exhibition has not yet opened, false if currently active,
       "tags": ["relevant", "tags"]
     }

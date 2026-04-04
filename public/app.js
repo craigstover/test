@@ -84,8 +84,11 @@ function renderEventCard(event) {
         ? `<a class="event-link" href="${event.sourceUrl}" target="_blank" rel="noopener">View source ↗</a>`
         : '';
 
+    const type = event.type ? `<div class="event-type-tag">${event.type}</div>` : '';
+
     return `
         <div class="event-card">
+            ${type}
             <div class="event-title">${title}</div>
             ${artist}
             <div class="event-venue">${venue}</div>
