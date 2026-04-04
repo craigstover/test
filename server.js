@@ -438,8 +438,6 @@ Interests: contemporary sculpture, abstraction, conceptual art, socially engaged
   }
 });
 
-});
-
 app.post('/api/arena-discovery', async (req, res) => {
   try {
     const ARENA_API = 'https://api.are.na/v2';
