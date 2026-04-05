@@ -265,7 +265,7 @@ const MUSEUM_SOURCES = [
   { name: 'Upstate Art Weekend', url: 'https://www.upstateartweekend.com' },
   { name: 'MASS MoCA',          url: 'https://massmoca.org/exhibitions' },
   { name: 'Basilica Hudson',    url: 'https://basilicahudson.org' },
-  { name: 'The School (Jack Shainman)', url: 'https://theschoolkinderhook.com' },
+  { name: 'The School (Jack Shainman)', url: 'https://jackshainman.com/exhibitions' },
   { name: 'Bard CCS',           url: 'https://ccs.bard.edu/exhibitions' },
   { name: 'Longhouse Reserve',  url: 'https://longhouse.org/programs' },
   { name: 'Fridman Gallery',    url: 'https://www.fridmangallery.com/exhibitions' },
