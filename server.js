@@ -588,6 +588,7 @@ let newsletterEvents = [];
 // Cached scan results
 let cachedEvents = [];
 let lastScanTime = null;
+let sourceStatuses = []; // { name, url, status: 'ok'|'failed', error? }
 
 async function runDailyScan() {
   console.log('Running scheduled scan...');
@@ -615,6 +616,13 @@ async function runDailyScan() {
     const successful = fetchResults
       .filter(r => r.status === 'fulfilled')
       .map(r => r.value);
+
+    sourceStatuses = fetchResults.map((r, i) => ({
+      name: MUSEUM_SOURCES[i].name,
+      url: MUSEUM_SOURCES[i].url,
+      status: r.status === 'fulfilled' ? 'ok' : 'failed',
+      error: r.status === 'rejected' ? r.reason?.message : undefined,
+    }));
 
     if (successful.length === 0) throw new Error('All sources failed');
 
@@ -788,6 +796,11 @@ app.get('/api/events', (req, res) => {
 app.post('/api/refresh', async (req, res) => {
   res.json({ message: 'Scan started' });
   runDailyScan();
+});
+
+// Source status from last scan
+app.get('/api/source-status', (req, res) => {
+  res.json({ lastScanTime, sources: sourceStatuses });
 });
 
 // Serve the main page
