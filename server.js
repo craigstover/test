@@ -244,7 +244,7 @@ const MUSEUM_SOURCES = [
   { name: 'Whitney',            url: 'https://whitney.org/exhibitions' },
   { name: 'Guggenheim',         url: 'https://www.guggenheim.org/exhibitions' },
   { name: 'Brooklyn Museum',    url: 'https://www.brooklynmuseum.org/exhibitions' },
-  { name: 'Cooper Hewitt',      url: 'https://www.cooperhewitt.org/events/exhibitions' },
+  { name: 'Cooper Hewitt',      url: 'https://www.cooperhewitt.org/exhibitions/' },
   { name: 'Studio Museum in Harlem', url: 'https://studiomuseum.org/exhibitions' },
   { name: 'Dia Art Foundation',  url: 'https://www.diaart.org/exhibition/exhibitions-projects' },
   { name: 'New Museum',         url: 'https://www.newmuseum.org/exhibitions' },
