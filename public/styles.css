@@ -87,10 +87,37 @@ h1 {
     50% { opacity: 0.25; }
 }
 
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
 .status {
     font-size: 0.82rem;
     letter-spacing: 0.02em;
     color: var(--gray-500);
+}
+
+.refresh-btn {
+    background: none;
+    border: 1px solid var(--gray-300);
+    font-family: inherit;
+    font-size: 1rem;
+    color: var(--gray-500);
+    cursor: pointer;
+    width: 2rem;
+    height: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.15s, border-color 0.15s;
+    line-height: 1;
+}
+
+.refresh-btn:hover {
+    color: var(--black);
+    border-color: var(--gray-500);
 }
 
 /* ── Empty state CTA ─────────────────────────────────────────────────────── */

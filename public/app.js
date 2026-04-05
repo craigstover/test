@@ -5,6 +5,7 @@ const emptyState = document.getElementById('empty-state');
 const eventsSection = document.getElementById('section-events');
 
 document.getElementById('scanBtn').addEventListener('click', forceRefresh);
+document.getElementById('refreshBtn').addEventListener('click', forceRefresh);
 
 // Load cached events on page visit
 loadEvents();
