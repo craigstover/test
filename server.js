@@ -256,7 +256,7 @@ const MUSEUM_SOURCES = [
   { name: 'Bronx Museum',       url: 'https://www.bronxmuseum.org/exhibitions' },
   { name: 'Queens Museum',      url: 'https://queensmuseum.org/exhibitions' },
   { name: 'Noguchi Museum',     url: 'https://www.noguchi.org/museum/exhibitions/current/' },
-  { name: 'SculptureCenter',    url: 'https://www.sculpture-center.org/program' },
+  { name: 'SculptureCenter',    url: 'https://www.sculpture-center.org/exhibitions/' },
   // Long Island
   { name: 'Parrish Art Museum', url: 'https://www.parrishart.org/exhibitions' },
   { name: 'Guild Hall',         url: 'https://www.guildhall.org/exhibitions' },
