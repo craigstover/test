@@ -12,16 +12,27 @@ async function loadEvents() {
     errorEl.style.display = 'none';
 
     try {
-        const res = await fetch('/api/scan-museums', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' }
-        });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data = await res.json();
+        const [scanRes, newsletterRes] = await Promise.all([
+            fetch('/api/scan-museums', { method: 'POST', headers: { 'Content-Type': 'application/json' } }),
+            fetch('/api/newsletter-events')
+        ]);
+
+        if (!scanRes.ok) throw new Error(`HTTP ${scanRes.status}`);
+        const data = await scanRes.json();
         if (data.error) throw new Error(data.error);
 
-        const active = (data.events || []).filter(e => !e.isUpcoming);
-        const upcoming = (data.events || []).filter(e => e.isUpcoming);
+        const newsletterData = newsletterRes.ok ? await newsletterRes.json() : { events: [] };
+        const allEvents = [...(data.events || []), ...(newsletterData.events || [])];
+
+        allEvents.sort((a, b) => {
+            if (!a.startDate && !b.startDate) return 0;
+            if (!a.startDate) return 1;
+            if (!b.startDate) return -1;
+            return a.startDate.localeCompare(b.startDate);
+        });
+
+        const active = allEvents.filter(e => !e.isUpcoming);
+        const upcoming = allEvents.filter(e => e.isUpcoming);
 
         renderEventGroup('events-active', 'now on', active);
         renderEventGroup('events-upcoming', 'upcoming', upcoming);

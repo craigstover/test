@@ -6,8 +6,9 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware
+// Middleware — handle both JSON and Mailgun's urlencoded POST
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(express.static('public'));
 
 // Initialize Anthropic client
@@ -579,6 +580,84 @@ Return ONLY JSON (no markdown, no backticks):
     console.error('Error with Are.na discovery:', error);
     res.status(500).json({ error: error.message });
   }
+});
+
+// In-memory store for newsletter events (persists until server restarts)
+let newsletterEvents = [];
+
+// Mailgun posts form-encoded data when an email arrives
+app.post('/api/ingest-email', async (req, res) => {
+  // Acknowledge immediately so Mailgun doesn't retry
+  res.sendStatus(200);
+
+  try {
+    const subject = req.body.subject || '';
+    const sender  = req.body.sender || req.body.from || '';
+    const html    = req.body['body-html'] || req.body['stripped-html'] || '';
+    const text    = req.body['body-plain'] || req.body['stripped-text'] || '';
+
+    // Prefer plain text, fall back to stripped HTML
+    const body = text || stripHtml(html);
+    if (!body || body.length < 50) return;
+
+    const today = new Date().toISOString().split('T')[0];
+
+    const message = await anthropic.messages.create({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 2000,
+      messages: [{
+        role: 'user',
+        content: `Today is ${today}. The following is an art newsletter email. Extract any art exhibitions, events, or openings mentioned that are located in New York City, Long Island, upstate New York, or nearby East Coast areas (CT, MA, NJ, PA). Only include current or upcoming events, not past ones.
+
+From: ${sender}
+Subject: ${subject}
+
+EMAIL BODY:
+${body.slice(0, 6000)}
+
+Return ONLY JSON (no markdown, no backticks):
+{
+  "events": [
+    {
+      "title": "Exhibition or event title",
+      "artist": "Artist name(s) or null",
+      "venue": "Gallery or venue name",
+      "city": "City",
+      "state": "Two-letter state code",
+      "dates": "Date range as written, or null",
+      "startDate": "YYYY-MM-DD or null",
+      "description": "1-3 sentence summary",
+      "type": "one of: art fair, gallery show, museum show, public art, performance, residency",
+      "isUpcoming": true if not yet opened,
+      "sourceUrl": null,
+      "imageUrl": null,
+      "source": "newsletter"
+    }
+  ]
+}`
+      }]
+    });
+
+    const content = message.content[0].text;
+    let jsonMatch = content.match(/```json\s*([\s\S]*?)\s*```/) || content.match(/\{[\s\S]*\}/);
+    const jsonString = jsonMatch ? (jsonMatch[1] || jsonMatch[0]) : content;
+    const data = JSON.parse(jsonString);
+    const incoming = (data.events || []).filter(e => e.title);
+
+    // Merge, avoiding duplicates by title+venue
+    const existing = new Set(newsletterEvents.map(e => `${e.title}|${e.venue}`));
+    const fresh = incoming.filter(e => !existing.has(`${e.title}|${e.venue}`));
+    newsletterEvents = [...newsletterEvents, ...fresh];
+
+    console.log(`Ingested ${fresh.length} new events from: ${sender}`);
+  } catch (err) {
+    console.error('Error ingesting email:', err);
+  }
+});
+
+// Return stored newsletter events
+app.get('/api/newsletter-events', (req, res) => {
+  res.json({ events: newsletterEvents });
 });
 
 // Serve the main page
