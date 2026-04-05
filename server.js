@@ -585,6 +585,125 @@ Return ONLY JSON (no markdown, no backticks):
 // In-memory store for newsletter events (persists until server restarts)
 let newsletterEvents = [];
 
+// Cached scan results
+let cachedEvents = [];
+let lastScanTime = null;
+
+async function runDailyScan() {
+  console.log('Running scheduled scan...');
+  try {
+    const fetchResults = await Promise.allSettled(
+      MUSEUM_SOURCES.map(async (source) => {
+        const response = await fetch(source.url, {
+          signal: AbortSignal.timeout(10000),
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+            'Accept-Language': 'en-US,en;q=0.9',
+            'Accept-Encoding': 'gzip, deflate, br',
+            'Cache-Control': 'no-cache',
+          }
+        });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const html = await response.text();
+        const text = stripHtml(html).slice(0, 2500);
+        const image = extractOgImage(html);
+        return { name: source.name, url: source.url, text, image };
+      })
+    );
+
+    const successful = fetchResults
+      .filter(r => r.status === 'fulfilled')
+      .map(r => r.value);
+
+    if (successful.length === 0) throw new Error('All sources failed');
+
+    const BATCH_SIZE = 6;
+    const batches = [];
+    for (let i = 0; i < successful.length; i += BATCH_SIZE) {
+      batches.push(successful.slice(i, i + BATCH_SIZE));
+    }
+
+    const tasteProfile = `Favorite artists: ${userProfile.artists.join(', ')}
+Preferred venues: ${userProfile.venues.join(', ')}
+Interests: contemporary sculpture, abstraction, conceptual art, socially engaged practices, installation, materiality`;
+
+    const jsonSchema = `{
+  "events": [
+    {
+      "title": "Exhibition title",
+      "artist": "Artist name(s) or null if not listed",
+      "venue": "Venue name exactly as it appears in the source header",
+      "city": "City name, e.g. New York, Beacon, North Adams, East Hampton",
+      "state": "Two-letter state code, e.g. NY, MA",
+      "dates": "Date range as found on the page, or null",
+      "startDate": "Start date in YYYY-MM-DD format, or null if unknown",
+      "description": "1-3 sentence summary of the exhibition",
+      "type": "one of: art fair, gallery show, museum show, public art, performance, residency",
+      "imageUrl": "URL from the nearest [img:URL] marker in the listing, or null if none found",
+      "isUpcoming": true if the exhibition has not yet opened, false if currently active,
+      "tags": ["relevant", "tags"]
+    }
+  ]
+}`;
+
+    const today = new Date().toISOString().split('T')[0];
+
+    const batchResults = await Promise.allSettled(
+      batches.map(async (batch) => {
+        const combined = batch.map(s => `=== ${s.name} ===\n${s.text}`).join('\n\n');
+        const message = await anthropic.messages.create({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 2000,
+          messages: [{
+            role: 'user',
+            content: `Today is ${today}. Extract exhibition listings from the page content below. Only include exhibitions that are currently active or upcoming (not past). Use the venue name exactly as it appears in the === source header ===.
+
+Only include events located in New York City (Manhattan, Brooklyn, Queens, Bronx, Staten Island), Long Island, upstate New York, or other nearby East Coast locations (Connecticut, Massachusetts, New Jersey, Pennsylvania). Exclude any events outside this region.
+
+Taste profile for context:\n${tasteProfile}\n\nLISTINGS:\n${combined}\n\nReturn ONLY JSON (no markdown, no backticks):\n${jsonSchema}`
+          }]
+        });
+
+        const content = message.content[0].text;
+        let jsonMatch = content.match(/```json\s*([\s\S]*?)\s*```/);
+        if (!jsonMatch) jsonMatch = content.match(/\{[\s\S]*\}/);
+        const jsonString = jsonMatch ? (jsonMatch[1] || jsonMatch[0]) : content;
+        const parsed = JSON.parse(jsonString);
+
+        const batchImageMap = Object.fromEntries(batch.map(s => [s.name, s.image]));
+        (parsed.events || []).forEach(event => {
+          event.sourceUrl = sourceUrlMap[event.venue] || null;
+          event.imageUrl = event.imageUrl || batchImageMap[event.venue] || null;
+        });
+
+        return parsed;
+      })
+    );
+
+    const allEvents = batchResults
+      .filter(r => r.status === 'fulfilled')
+      .flatMap(r => r.value.events || []);
+
+    allEvents.sort((a, b) => {
+      if (!a.startDate && !b.startDate) return 0;
+      if (!a.startDate) return 1;
+      if (!b.startDate) return -1;
+      return a.startDate.localeCompare(b.startDate);
+    });
+
+    cachedEvents = allEvents;
+    lastScanTime = new Date().toISOString();
+    console.log(`Scan complete: ${allEvents.length} events cached at ${lastScanTime}`);
+  } catch (err) {
+    console.error('Scheduled scan failed:', err);
+  }
+}
+
+// Run on startup, then every 24 hours
+runDailyScan();
+setInterval(runDailyScan, 24 * 60 * 60 * 1000);
+
 // Mailgun posts form-encoded data when an email arrives
 app.post('/api/ingest-email', async (req, res) => {
   // Acknowledge immediately so Mailgun doesn't retry
@@ -658,6 +777,17 @@ Return ONLY JSON (no markdown, no backticks):
 // Return stored newsletter events
 app.get('/api/newsletter-events', (req, res) => {
   res.json({ events: newsletterEvents });
+});
+
+// Return cached scan results + newsletter events merged
+app.get('/api/events', (req, res) => {
+  res.json({ events: cachedEvents, lastScanTime, newsletterEvents });
+});
+
+// Force a fresh scan
+app.post('/api/refresh', async (req, res) => {
+  res.json({ message: 'Scan started' });
+  runDailyScan();
 });
 
 // Serve the main page

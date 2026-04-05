@@ -4,7 +4,10 @@ const errorEl = document.getElementById('error');
 const emptyState = document.getElementById('empty-state');
 const eventsSection = document.getElementById('section-events');
 
-document.getElementById('scanBtn').addEventListener('click', loadEvents);
+document.getElementById('scanBtn').addEventListener('click', forceRefresh);
+
+// Load cached events on page visit
+loadEvents();
 
 async function loadEvents() {
     emptyState.style.display = 'none';
@@ -12,17 +15,17 @@ async function loadEvents() {
     errorEl.style.display = 'none';
 
     try {
-        const [scanRes, newsletterRes] = await Promise.all([
-            fetch('/api/scan-museums', { method: 'POST', headers: { 'Content-Type': 'application/json' } }),
-            fetch('/api/newsletter-events')
-        ]);
+        const res = await fetch('/api/events');
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
 
-        if (!scanRes.ok) throw new Error(`HTTP ${scanRes.status}`);
-        const data = await scanRes.json();
-        if (data.error) throw new Error(data.error);
+        const allEvents = [...(data.events || []), ...(data.newsletterEvents || [])];
 
-        const newsletterData = newsletterRes.ok ? await newsletterRes.json() : { events: [] };
-        const allEvents = [...(data.events || []), ...(newsletterData.events || [])];
+        if (allEvents.length === 0) {
+            emptyState.style.display = 'flex';
+            statusEl.textContent = data.lastScanTime ? 'scan in progress' : '';
+            return;
+        }
 
         allEvents.sort((a, b) => {
             if (!a.startDate && !b.startDate) return 0;
@@ -39,14 +42,40 @@ async function loadEvents() {
 
         eventsSection.style.display = 'block';
 
-        const note = data.failedSources?.length ? ` — ${data.failedSources.length} sources unavailable` : '';
-        statusEl.textContent = `${active.length + upcoming.length} events${note}`;
+        const lastUpdated = data.lastScanTime
+            ? ` · updated ${new Date(data.lastScanTime).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
+            : '';
+        statusEl.textContent = `${active.length + upcoming.length} events${lastUpdated}`;
 
     } catch (err) {
         showError(`failed to load events: ${err.message}`);
         emptyState.style.display = 'flex';
         statusEl.textContent = '';
     } finally {
+        setLoading(false);
+    }
+}
+
+async function forceRefresh() {
+    emptyState.style.display = 'none';
+    setLoading(true);
+    errorEl.style.display = 'none';
+    statusEl.textContent = 'scanning…';
+    try {
+        await fetch('/api/refresh', { method: 'POST' });
+        // Poll for results — scan takes ~60s
+        let attempts = 0;
+        const poll = setInterval(async () => {
+            attempts++;
+            const res = await fetch('/api/events');
+            const data = await res.json();
+            if ((data.events || []).length > 0 || attempts > 20) {
+                clearInterval(poll);
+                loadEvents();
+            }
+        }, 5000);
+    } catch (err) {
+        showError(`refresh failed: ${err.message}`);
         setLoading(false);
     }
 }
