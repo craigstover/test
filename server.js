@@ -261,7 +261,7 @@ const MUSEUM_SOURCES = [
   { name: 'Parrish Art Museum', url: 'https://www.parrishart.org/exhibitions' },
   { name: 'Guild Hall',         url: 'https://www.guildhall.org/exhibitions' },
   // Upstate / Hudson Valley / Catskills
-  { name: 'Storm King',         url: 'https://stormking.org/exhibitions' },
+  { name: 'Storm King',         url: 'https://stormking.org/' },
   { name: 'Upstate Art Weekend', url: 'https://www.upstateartweekend.com' },
   { name: 'MASS MoCA',          url: 'https://massmoca.org/exhibitions' },
   { name: 'Basilica Hudson',    url: 'https://basilicahudson.org' },
