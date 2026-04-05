@@ -246,10 +246,9 @@ const MUSEUM_SOURCES = [
   { name: 'Brooklyn Museum',    url: 'https://www.brooklynmuseum.org/exhibitions' },
   { name: 'Cooper Hewitt',      url: 'https://www.cooperhewitt.org/events/exhibitions' },
   { name: 'Studio Museum in Harlem', url: 'https://studiomuseum.org/exhibitions' },
-  { name: 'Dia Chelsea',        url: 'https://www.diaart.org/exhibitions/main' },
-  { name: 'Dia:Beacon',         url: 'https://www.diaart.org/visit/dia-beacon' },
+  { name: 'Dia Art Foundation',  url: 'https://www.diaart.org/exhibition/exhibitions-projects' },
   { name: 'New Museum',         url: 'https://www.newmuseum.org/exhibitions' },
-  { name: 'MoMA PS1',           url: 'https://www.momaps1.org/exhibitions' },
+  { name: 'MoMA PS1',           url: 'https://www.momaps1.org/calendar' },
   { name: 'The Frick',          url: 'https://www.frick.org/exhibitions' },
   { name: 'The Drawing Center', url: 'https://www.drawingcenter.org/exhibitions' },
   { name: 'ICP',                url: 'https://www.icp.org/exhibitions' },
@@ -257,12 +256,11 @@ const MUSEUM_SOURCES = [
   { name: 'Bronx Museum',       url: 'https://www.bronxmuseum.org/exhibitions' },
   { name: 'Queens Museum',      url: 'https://queensmuseum.org/exhibitions' },
   { name: 'Noguchi Museum',     url: 'https://www.noguchi.org/programs/exhibitions' },
-  { name: 'SculptureCenter',    url: 'https://www.sculpture-center.org/exhibitions' },
+  { name: 'SculptureCenter',    url: 'https://www.sculpture-center.org/program' },
   // Long Island
   { name: 'Parrish Art Museum', url: 'https://www.parrishart.org/exhibitions' },
   { name: 'Guild Hall',         url: 'https://www.guildhall.org/exhibitions' },
   // Upstate / Hudson Valley / Catskills
-  { name: 'Dia:Beacon',         url: 'https://www.diaart.org/visit/dia-beacon' },
   { name: 'Storm King',         url: 'https://stormking.org/exhibitions' },
   { name: 'Upstate Art Weekend', url: 'https://www.upstateartweekend.com' },
   { name: 'MASS MoCA',          url: 'https://massmoca.org/exhibitions' },
@@ -288,7 +286,7 @@ const MUSEUM_SOURCES = [
   { name: 'Bortolami',              url: 'https://bortolamigallery.com' },
   { name: 'Sperone Westwater',      url: 'https://www.speronewestwater.com/exhibitions' },
   { name: 'James Cohan',            url: 'https://www.jamescohan.com/exhibitions' },
-  { name: 'The Hole',               url: 'https://theholenyc.com/exhibitions' },
+  { name: 'The Hole',               url: 'https://theholenyc.com' },
   { name: 'Shoot the Lobster',      url: 'https://www.shootthelobster.com' },
   { name: 'Company Gallery',        url: 'https://www.company.gallery' },
   { name: 'Thierry Goldberg',       url: 'https://thierrygoldberg.com/exhibitions' },
@@ -334,12 +332,11 @@ const MUSEUM_SOURCES = [
   // Public Art
   { name: 'Public Art Fund',    url: 'https://www.publicartfund.org/exhibitions' },
   // Press / Listings
-  { name: 'Brooklyn Rail',      url: 'https://brooklynrail.org/artseen/' },
-  { name: 'Artforum',           url: 'https://www.artforum.com/exhibitions' },
-  { name: 'Frieze Magazine',    url: 'https://www.frieze.com/exhibitions' },
-  { name: 'Hyperallergic',      url: 'https://hyperallergic.com/exhibitions/' },
-  { name: 'Time Out New York',  url: 'https://www.timeout.com/newyork/art/best-art-exhibitions-in-nyc-right-now' },
-  { name: 'New York Magazine',  url: 'https://nymag.com/arts-and-entertainment/art/' },
+  { name: 'Brooklyn Rail',      url: 'https://brooklynrail.org/artseen' },
+  { name: 'Artforum',           url: 'https://www.artforum.com/news' },
+  { name: 'Hyperallergic',      url: 'https://hyperallergic.com/reviews/' },
+  { name: 'Time Out New York',  url: 'https://www.timeout.com/newyork/art' },
+  { name: 'New York Magazine',  url: 'https://nymag.com/arts/' },
 ];
 
 // Build a lookup map from source name to URL
