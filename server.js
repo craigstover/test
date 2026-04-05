@@ -248,7 +248,7 @@ const MUSEUM_SOURCES = [
   { name: 'Studio Museum in Harlem', url: 'https://studiomuseum.org/exhibitions' },
   { name: 'Dia Art Foundation',  url: 'https://www.diaart.org/exhibition/exhibitions-projects' },
   { name: 'New Museum',         url: 'https://www.newmuseum.org/exhibitions' },
-  { name: 'MoMA PS1',           url: 'https://www.momaps1.org/calendar' },
+  { name: 'MoMA PS1',           url: 'https://www.momaps1.org/en/programs' },
   { name: 'The Frick',          url: 'https://www.frick.org/exhibitions' },
   { name: 'The Drawing Center', url: 'https://www.drawingcenter.org/exhibitions' },
   { name: 'ICP',                url: 'https://www.icp.org/exhibitions' },
