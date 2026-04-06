@@ -8,13 +8,18 @@
     "dev": "node server.js",
     "lint": "eslint ."
   },
-  "keywords": ["art", "nyc", "events", "ai"],
+  "keywords": [
+    "art",
+    "nyc",
+    "events",
+    "ai"
+  ],
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "express": "^4.18.2",
     "@anthropic-ai/sdk": "^0.36.3",
-    "dotenv": "^16.4.7"
+    "dotenv": "^16.4.7",
+    "express": "^4.18.2"
   },
   "devDependencies": {
     "eslint": "^9.22.0",
