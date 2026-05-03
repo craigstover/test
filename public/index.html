@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sightline</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <div class="header-top">
+            <div class="header-brand">
+                <h1>Sightline</h1>
+                <p class="header-subtitle">art events in and around new york city</p>
+            </div>
+            <div class="header-right">
+                <span class="status" id="status"></span>
+                <button id="refreshBtn" class="refresh-btn" title="refresh events">↻</button>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div id="error" style="display:none;"></div>
+
+        <div id="loading" class="loading" style="display:none;">
+            <div class="spinner"></div>
+            <p>Scanning</p>
+        </div>
+
+        <div id="empty-state" class="empty-state">
+            <button id="scanBtn" class="scan-cta">refresh</button>
+        </div>
+
+        <section id="section-events" class="content-section" style="display:none;">
+            <div id="events-active"></div>
+            <div id="events-upcoming"></div>
+        </section>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+</html>
